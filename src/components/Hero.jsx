@@ -38,7 +38,7 @@ export default function Hero() {
               className="font-['Playfair_Display'] text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight mb-6 animate-fadeInUp delay-100"
             >
             Ambil{' '}
-              <span className="shimmer-text">Dokument</span>
+              <span className="shimmer-text">Dokumen</span>
               {', '}
               <br className="hidden sm:block" />
               Lebih Cepat{' '}
