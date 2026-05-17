@@ -29,7 +29,7 @@ export default function Hero() {
             <div className="inline-flex items-center gap-2 bg-amber-400/10 border border-amber-400/30 rounded-full px-4 py-2 mb-6 animate-fadeInUp">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse-dot"></span>
               <span className="text-amber-300 text-xs font-bold tracking-widest uppercase">
-                Layanan Fast Track Kemenag
+                Layanan Fast Track Kemenag Gowa
               </span>
             </div>
 
