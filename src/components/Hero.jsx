@@ -44,14 +44,13 @@ export default function Hero() {
               Tanpa{' '}
               <span className="text-emerald-400">Antre Panjang</span>
             </h1>
-            <h1
-              className="font-['Playfair_Display'] text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight mb-6 animate-fadeInUp delay-100"
-            >
-              <span className="text-emerald-400 mb-8">Selamat Datang</span>
-            </h1>
+
+            <p className="text-white/65 text-lg text-center mb-10">
+              Selmat Datang, Layanan Cepat Anda Dimulai di Sini.
+            </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-4 mb-12 animate-fadeInUp delay-300 mt-8">
+            <div className="flex flex-wrap gap-4 mb-12 mt-10 animate-fadeInUp delay-300">
               <button
                 onClick={() => scrollTo('daftar')}
                 className="gold-btn px-7 py-4 rounded-2xl text-[#022c1e] font-bold text-base shadow-xl cursor-pointer flex items-center gap-2"

@@ -144,7 +144,7 @@ export default function Services() {
       
 
       {/* ══════════════ SECTION 2: Daftar Lengkap Layanan ══════════════ */}
-      <section className="py-10 bg-gray-50">
+      <section id="layanan" className="py-10 bg-gray-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="flex-1 mb-12">
