@@ -6,11 +6,11 @@ export const JENIS_LAYANAN = [{
         tag: 'Prioritas',
         desc: 'Layanan prioritas tanpa antre panjang di loket reguler',
         items: [
-            { name: 'Legalisir Dokumen Pendidikan', time: '15 Menit' },
-            { name: 'Legalisir Dokumen Keagamaan', time: '15 Menit' },
-            { name: 'Legalisir Dokumen Administrasi', time: '15 Menit' },
-            { name: 'Pengambilan Berkas Jadi', time: '10 Menit' },
-            { name: 'Pengambilan Surat Keluar', time: '10 Menit' },
+            { name: 'Legalisir Dokumen Pendidikan', },
+            { name: 'Legalisir Dokumen Keagamaan', },
+            { name: 'Legalisir Dokumen Administrasi', },
+            { name: 'Pengambilan Berkas Jadi' },
+            { name: 'Pengambilan Surat Keluar' },
         ],
     },
     {
@@ -21,13 +21,13 @@ export const JENIS_LAYANAN = [{
         tag: 'Pendidikan',
         desc: 'Layanan administrasi pendidikan dan madrasah',
         items: [
-            { name: 'Rekomendasi Calon Kepala Madrasah', time: '5 Menit' },
-            { name: 'Mutasi Guru dan Tendik', time: '5 Menit' },
-            { name: 'Rekomendasi Bantuan Lembaga & Siswa', time: '5 Menit' },
-            { name: 'Rekomendasi Izin Belajar Siswa Keluar Negeri', time: '5 Menit' },
-            { name: 'Surat Keterangan Mutasi Siswa', time: '7 Menit' },
-            { name: 'Rekomendasi Izin Operasional Madrasah', time: '10 Menit' },
-            { name: 'Rekomendasi Akreditasi RA/Madrasah', time: '5 Menit' },
+            { name: 'Rekomendasi Calon Kepala Madrasah', },
+            { name: 'Mutasi Guru dan Tendik', },
+            { name: 'Rekomendasi Bantuan Lembaga & Siswa', },
+            { name: 'Rekomendasi Izin Belajar Siswa Keluar Negeri', },
+            { name: 'Surat Keterangan Mutasi Siswa', },
+            { name: 'Rekomendasi Izin Operasional Madrasah' },
+            { name: 'Rekomendasi Akreditasi RA/Madrasah', },
         ],
     },
     {
@@ -38,9 +38,9 @@ export const JENIS_LAYANAN = [{
         tag: 'Keagamaan',
         desc: 'Layanan bimbingan masyarakat Islam',
         items: [
-            { name: 'Keterangan Terdaftar Mesjid/Mushollah', time: '45 Menit' },
-            { name: 'Rekomendasi Bantuan Mesjid/Mushollah', time: '45 Menit' },
-            { name: 'Keterangan Terdaftar Majelis Taklim', time: '30 Menit' },
+            { name: 'Keterangan Terdaftar Mesjid/Mushollah', },
+            { name: 'Rekomendasi Bantuan Mesjid/Mushollah', },
+            { name: 'Keterangan Terdaftar Majelis Taklim', },
         ],
     },
     {
@@ -51,9 +51,9 @@ export const JENIS_LAYANAN = [{
         tag: 'PAI',
         desc: 'Layanan pendidikan agama Islam',
         items: [
-            { name: 'Aktivasi Akun Emis Pendis', time: '10 Menit' },
-            { name: 'Aktivasi Akun Siaga Pendis', time: '10 Menit' },
-            { name: 'Dispensasi Kelayakan Tunjangan GPAI', time: '10 Menit' },
+            { name: 'Aktivasi Akun Emis Pendis' },
+            { name: 'Aktivasi Akun Siaga Pendis' },
+            { name: 'Dispensasi Kelayakan Tunjangan GPAI' },
         ],
     },
 ];
