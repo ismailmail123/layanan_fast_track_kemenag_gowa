@@ -55,10 +55,10 @@ function ServiceModal() {
                   </span>
                   <span className="text-gray-800 text-sm font-medium">{item.name}</span>
                 </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0 ml-3">
+                {/* <div className="flex items-center gap-1.5 flex-shrink-0 ml-3">
                   <Clock size={12} className={c.text} />
                   <span className={`text-xs font-bold ${c.text} whitespace-nowrap`}>{item.time}</span>
-                </div>
+                </div> */}
               </li>
             ))}
           </ul>
@@ -119,10 +119,10 @@ function ServiceAccordion({ service, isOpen, onToggle }) {
                   </div>
                   <span className="text-gray-800 text-sm font-medium leading-snug">{item.name}</span>
                 </div>
-                <div className={`flex items-center gap-1 flex-shrink-0 ml-3 px-2.5 py-1 rounded-full bg-white border ${c.border}`}>
+                {/* <div className={`flex items-center gap-1 flex-shrink-0 ml-3 px-2.5 py-1 rounded-full bg-white border ${c.border}`}>
                   <Clock size={11} className={c.text} />
                   <span className={`text-xs font-bold ${c.text} whitespace-nowrap`}>{item.time}</span>
-                </div>
+                </div> */}
               </div>
             ))}
           </div>
