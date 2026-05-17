@@ -55,14 +55,14 @@ export default function Navbar() {
           </div>
 
           {/* CTA */}
-          <div className="hidden md:block">
+          {/* <div className="hidden md:block">
             <button
               onClick={() => scrollTo('daftar')}
               className="gold-btn px-5 py-2 rounded-xl text-[#022c1e] font-bold text-sm shadow-lg cursor-pointer"
             >
               Daftar Sekarang →
             </button>
-          </div>
+          </div> */}
 
           {/* Mobile menu btn */}
           <button
