@@ -37,12 +37,12 @@ export default function Hero() {
             <h1
               className="font-['Playfair_Display'] text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight mb-6 animate-fadeInUp delay-100"
             >
-              Proses{' '}
-              <span className="shimmer-text">Cepat</span>
+            Ambil{' '}
+              <span className="shimmer-text">Dokument</span>
               {', '}
               <br className="hidden sm:block" />
-              Tanpa{' '}
-              <span className="text-emerald-400">Antre Panjang</span>
+              Lebih Cepat{' '}
+              <span className="text-emerald-400">dan Mudah</span>
             </h1>
 
             <p className="text-white/65 text-lg text-center mb-10">
