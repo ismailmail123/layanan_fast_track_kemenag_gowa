@@ -2,7 +2,7 @@
 import { Zap, CheckCircle, ArrowRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { FAST_TRACK_STEPS } from '../services/ContactService';
-import kemenagGowa from '../assets/kemenag_gowa.jpeg';
+import kemenagGowa from '../assets/fast-track.jpeg';
 
 export default function Hero() {
   const setActiveSection = useStore((s) => s.setActiveSection);
