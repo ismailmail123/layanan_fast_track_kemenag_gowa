@@ -17,16 +17,12 @@ export default defineConfig({
     },
     server: {
         proxy: {
-            '/api': {
-                target: 'https://script.google.com',
+            '/google-script': {
+                target: 'https://script.google.com/macros/s/',
                 changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/api/, ''),
-                configure: (proxy, options) => {
-                    proxy.on('proxyReq', (proxyReq, req, res) => {
-                        // Tambahkan header jika diperlukan
-                        proxyReq.setHeader('Origin', 'http://localhost:3000');
-                    });
-                }
+                rewrite: (path) => path.replace(/^\/google-script/, ''),
+                secure: false,
+                ws: true
             }
         }
     }
