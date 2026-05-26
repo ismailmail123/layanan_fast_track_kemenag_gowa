@@ -1,5 +1,5 @@
 import Routers from "./routes";
-export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywaIB5_2YEZU7iHLOr6YSGv41cYk39S6n2QpHZCttds2Ev1dNcMTFTK7L1QroDIq7k7w/exec";
+export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNmaHCoo54d-OK_GxTCLJPDmhC5QDGfnsD0GY3RcBJ58Ph0JrMiDrJCecQ9Zirim5YJQ/exec";
 const App = () => {
 
     return (

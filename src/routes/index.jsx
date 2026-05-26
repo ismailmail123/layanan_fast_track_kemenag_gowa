@@ -1,7 +1,6 @@
 // import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import HomePage from '../pages/Homepage';
-import Service from '../pages/PageRegistService';
 // import NotFound from "../pages/404";
 const Index = () => {
 
@@ -11,13 +10,7 @@ const Index = () => {
       element: 
           <HomePage />
       
-    },    
-    {
-      path: '/register-service',
-      element: 
-          <Service />
-      
-    },    
+    },     
     
     // {
     //   path: '/notfound',

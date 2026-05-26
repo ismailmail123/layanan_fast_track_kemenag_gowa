@@ -162,12 +162,22 @@ export const formatTanggal = (date = new Date()) => {
     });
 };
 
-export const formatTanggalPendek = (date = new Date()) => {
-    return date.toLocaleDateString('id-ID', {
-        day: '2-digit',
+export const formatTanggalPendek = () => {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'Asia/Makassar',
+        year: 'numeric',
         month: '2-digit',
-        year: 'numeric'
-    }).split('/').join('/');
+        day: '2-digit'
+    });
+
+    const parts = formatter.formatToParts(now);
+    const day = parts.find(p => p.type === 'day').value;
+    const month = parts.find(p => p.type === 'month').value;
+    const year = parts.find(p => p.type === 'year').value;
+
+
+    return `${day}/${month}/${year}`;
 };
 
 export const formatWaktu = (date = new Date()) => {

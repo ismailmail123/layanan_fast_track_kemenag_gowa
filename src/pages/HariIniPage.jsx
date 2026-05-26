@@ -1,6 +1,4 @@
-// ============================================================
-// pages/HariIniPage.jsx - Laporan Kontrol Hari Ini Per Sesi
-// ============================================================
+
 import { useState, useEffect } from "react";
 import { SESI_CONFIG, getSesiSaatIni, formatTanggal, formatTanggalPendek } from "../utils/index";
 import { APPS_SCRIPT_URL } from "../App";
@@ -44,72 +42,192 @@ const SesiBadge = ({ sesi, active, onClick, count }) => (
   </button>
 );
 
-// ── Kartu Data Patroli ───────────────────────────────────
-const PatrolCard = ({ data, warnaSesi }) => (
-  <div style={{
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderLeft: `3px solid ${warnaSesi}`,
-    borderRadius: 12,
-    padding: "14px 16px",
-    marginBottom: 10
-  }}>
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-      <div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>{data.namaPetugas}</div>
-        <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{data.jam} WITA</div>
-      </div>
-      <div style={{
-        background: "rgba(34,197,94,0.15)",
-        border: "1px solid rgba(34,197,94,0.3)",
-        borderRadius: 6,
-        padding: "3px 10px",
-        fontSize: 10,
-        fontWeight: 700,
-        color: "#4ade80",
-        letterSpacing: 0.5
-      }}>VALID</div>
-    </div>
+// ── Tabel Patroli (diperbaiki) ──────────────────────────
+const PatrolTable = ({ data, warnaSesi }) => {
+  const [expandRow, setExpandRow] = useState(null);
 
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: 8
-    }}>
-      <InfoItem icon="📍" label="Titik" val={data.namaTitik} />
-      <InfoItem icon="📏" label="Jarak" val={`${data.jarak} m`} />
-    </div>
-
-    {data.keterangan && data.keterangan !== "Tidak ada kejadian" && (
+  if (!data || data.length === 0) {
+    return (
       <div style={{
-        marginTop: 10,
-        padding: "10px 12px",
-        background: "rgba(251,191,36,0.08)",
-        border: "1px solid rgba(251,191,36,0.2)",
-        borderRadius: 8,
-        fontSize: 12,
-        color: "#fbbf24",
-        lineHeight: 1.5
+        textAlign: "center",
+        padding: "40px 20px",
+        background: "rgba(255,255,255,0.02)",
+        border: "1px dashed rgba(255,255,255,0.08)",
+        borderRadius: 16,
+        color: "#475569"
       }}>
-        <strong>Kejadian:</strong> {data.keterangan}
+        <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+        <div style={{ fontSize: 14, color: "#64748b" }}>Belum ada data kontrol</div>
       </div>
-    )}
-  </div>
-);
+    );
+  }
 
-const InfoItem = ({ icon, label, val }) => (
-  <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: "8px 10px" }}>
-    <div style={{ fontSize: 10, color: "#64748b", marginBottom: 3 }}>{icon} {label}</div>
-    <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0" }}>{val}</div>
-  </div>
-);
+  return (
+    <div style={{
+      overflowX: "auto",
+      borderRadius: 12,
+      border: "1px solid rgba(255,255,255,0.08)",
+      WebkitOverflowScrolling: "touch"
+    }}>
+      <table style={{
+        width: "100%",
+        borderCollapse: "collapse",
+        fontSize: 12,
+        minWidth: 500
+      }}>
+        {/* Head */}
+        <thead>
+          <tr style={{ background: "rgba(255,255,255,0.04)" }}>
+            {["No", "Petugas", "Jam", "Titik", "Jarak", ""].map((h, i) => (
+              <th key={i} style={{
+                padding: "10px 12px",
+                textAlign: i === 0 ? "center" : "left",
+                fontSize: 10,
+                fontWeight: 700,
+                color: "#64748b",
+                letterSpacing: 0.8,
+                textTransform: "uppercase",
+                borderBottom: "1px solid rgba(255,255,255,0.08)",
+                whiteSpace: "nowrap"
+              }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+
+        {/* Body */}
+        <tbody>
+          {data.map((d, idx) => {
+            const isOpen = expandRow === idx;
+            const hasKet = d.keterangan && d.keterangan !== "Tidak ada kejadian";
+
+            return (
+              <>
+                <tr
+                  onClick={() => setExpandRow(isOpen ? null : idx)}
+                  style={{
+                    background: isOpen
+                      ? "rgba(96,165,250,0.05)"
+                      : idx % 2 === 0
+                        ? "transparent"
+                        : "rgba(255,255,255,0.015)",
+                    borderLeft: isOpen
+                      ? `3px solid ${warnaSesi}`
+                      : "3px solid transparent",
+                    cursor: hasKet ? "pointer" : "default",
+                    transition: "background 0.15s, border-color 0.15s"
+                  }}
+                >
+                  {/* No */}
+                  <td style={{
+                    padding: "10px 12px",
+                    textAlign: "center",
+                    color: "#475569",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    fontVariantNumeric: "tabular-nums"
+                  }}>{idx + 1}</td>
+
+                  {/* Petugas */}
+                  <td style={{
+                    padding: "10px 12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    fontWeight: 600,
+                    color: "#f1f5f9",
+                    whiteSpace: "nowrap"
+                  }}>{d.namaPetugas}</td>
+
+                  {/* Jam */}
+                  <td style={{
+                    padding: "10px 12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    color: "#94a3b8",
+                    whiteSpace: "nowrap",
+                    fontVariantNumeric: "tabular-nums"
+                  }}>{d.jam} <span style={{ fontSize: 9, color: "#475569" }}>WITA</span></td>
+
+                  {/* Titik */}
+                  <td style={{
+                    padding: "10px 12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    color: "#cbd5e1",
+                    maxWidth: 180,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap"
+                  }}>
+                    <span title={d.namaTitik}>📍 {d.namaTitik}</span>
+                  </td>
+
+                  {/* Jarak */}
+                  <td style={{
+                    padding: "10px 12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    color: "#4ade80",
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                    fontVariantNumeric: "tabular-nums"
+                  }}>{d.jarak} m</td>
+
+                  {/* Expand toggle */}
+                  <td style={{
+                    padding: "10px 12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    textAlign: "center"
+                  }}>
+                    {hasKet ? (
+                      <span style={{
+                        fontSize: 10,
+                        color: isOpen ? warnaSesi : "#64748b",
+                        transition: "color 0.15s"
+                      }}>{isOpen ? "▲" : "▼"}</span>
+                    ) : (
+                      <span style={{ color: "#1e293b", fontSize: 10 }}>—</span>
+                    )}
+                  </td>
+                </tr>
+
+                {/* Expanded: Keterangan */}
+                {isOpen && hasKet && (
+                  <tr>
+                    <td colSpan={6} style={{
+                      padding: "0 12px 12px 12px",
+                      borderBottom: "1px solid rgba(255,255,255,0.05)",
+                      background: "rgba(96,165,250,0.03)"
+                    }}>
+                      <div style={{
+                        padding: "10px 14px",
+                        background: "rgba(251,191,36,0.08)",
+                        border: "1px solid rgba(251,191,36,0.2)",
+                        borderRadius: 8,
+                        fontSize: 12,
+                        color: "#fbbf24",
+                        lineHeight: 1.6
+                      }}>
+                        <strong>Kejadian:</strong> {d.keterangan}
+                      </div>
+                      <div style={{
+                        marginTop: 6,
+                        fontSize: 9,
+                        color: "#334155",
+                        fontFamily: "monospace"
+                      }}>{d.id}</div>
+                    </td>
+                  </tr>
+                )}
+              </>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 // ── Main Page ────────────────────────────────────────────
 export default function HariIniPage() {
   const [sesiAktif, setSesiAktif] = useState(getSesiSaatIni());
-  const [dataMap, setDataMap] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [dataMap, setDataMap]     = useState({});
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState(null);
   const [lastRefresh, setLastRefresh] = useState(null);
 
   const ambilData = async () => {
@@ -119,34 +237,31 @@ export default function HariIniPage() {
       const tanggal = formatTanggalPendek();
       const hasil = {};
 
-      // Ambil data semua sesi sekaligus
+      // Ambil semua sesi sekaligus dari GAS
       await Promise.all(SESI_CONFIG.map(async (s) => {
         const url = `${APPS_SCRIPT_URL}?action=getPatrols&tanggal=${encodeURIComponent(tanggal)}&sesi=${encodeURIComponent(s.id)}`;
-        const res = await fetch(url);
+        const res  = await fetch(url);
         const json = await res.json();
         hasil[s.id] = json.data || [];
       }));
 
       setDataMap(hasil);
       setLastRefresh(new Date());
-    } catch {
+    } catch (err) {
+      console.error("Error fetching data:", err);
       setError("Gagal memuat data. Periksa koneksi internet.");
     }
     setLoading(false);
   };
 
   useEffect(() => {
-    // avoid synchronous setState during effect by scheduling the initial load
     const initTimeout = setTimeout(() => ambilData(), 0);
-    const interval = setInterval(ambilData, 60000); // refresh tiap 1 menit
-    return () => {
-      clearTimeout(initTimeout);
-      clearInterval(interval);
-    };
+    const interval    = setInterval(ambilData, 60000);
+    return () => { clearTimeout(initTimeout); clearInterval(interval); };
   }, []);
 
   const sesiConfig = SESI_CONFIG.find(s => s.id === sesiAktif);
-  const dataSesi = dataMap[sesiAktif] || [];
+  const dataSesi   = dataMap[sesiAktif] || [];
 
   return (
     <div>
@@ -168,13 +283,18 @@ export default function HariIniPage() {
         marginBottom: 20
       }}>
         {SESI_CONFIG.map(s => (
-          <div key={s.id} style={{
-            background: "rgba(255,255,255,0.03)",
-            border: `1px solid ${s.warna}33`,
-            borderRadius: 12,
-            padding: "12px 14px",
-            cursor: "pointer"
-          }} onClick={() => setSesiAktif(s.id)}>
+          <div
+            key={s.id}
+            onClick={() => setSesiAktif(s.id)}
+            style={{
+              background: sesiAktif === s.id ? s.warna + "18" : "rgba(255,255,255,0.03)",
+              border: `1px solid ${sesiAktif === s.id ? s.warna + "55" : s.warna + "33"}`,
+              borderRadius: 12,
+              padding: "12px 14px",
+              cursor: "pointer",
+              transition: "all 0.2s"
+            }}
+          >
             <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4 }}>
               {s.icon} {s.label}
             </div>
@@ -272,25 +392,8 @@ export default function HariIniPage() {
           <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
           <div>Memuat data...</div>
         </div>
-      ) : dataSesi.length === 0 ? (
-        <div style={{
-          textAlign: "center",
-          padding: "40px 20px",
-          background: "rgba(255,255,255,0.02)",
-          border: "1px dashed rgba(255,255,255,0.08)",
-          borderRadius: 16,
-          color: "#475569"
-        }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-          <div style={{ fontSize: 14, color: "#64748b" }}>Belum ada data kontrol</div>
-          <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>
-            untuk {sesiConfig?.label} hari ini
-          </div>
-        </div>
       ) : (
-        dataSesi.map((d, i) => (
-          <PatrolCard key={i} data={d} warnaSesi={sesiConfig?.warna || "#60a5fa"} />
-        ))
+        <PatrolTable data={dataSesi} warnaSesi={sesiConfig?.warna || "#60a5fa"} />
       )}
 
       {/* Last refresh */}

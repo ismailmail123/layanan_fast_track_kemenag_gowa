@@ -1,12 +1,9 @@
-// ============================================================
-// pages/SemuaDataPage.jsx - Riwayat Semua Data Kontrol
-// ============================================================
 import { useState, useEffect } from "react";
 import { SESI_CONFIG } from "../utils/index";
 import { APPS_SCRIPT_URL } from "../App";
 
 const WARNA_SESI = Object.fromEntries(SESI_CONFIG.map(s => [s.id, s.warna]));
-const ICON_SESI = Object.fromEntries(SESI_CONFIG.map(s => [s.id, s.icon]));
+const ICON_SESI  = Object.fromEntries(SESI_CONFIG.map(s => [s.id, s.icon]));
 
 // ── Filter Chip ──────────────────────────────────────────
 const FilterChip = ({ label, active, onClick, color }) => (
@@ -27,103 +24,211 @@ const FilterChip = ({ label, active, onClick, color }) => (
   >{label}</button>
 );
 
-// ── Row Data ─────────────────────────────────────────────
-const DataRow = ({ data }) => {
-  const [expand, setExpand] = useState(false);
-  const warna = WARNA_SESI[data.sesi] || "#60a5fa";
-  const icon = ICON_SESI[data.sesi] || "📍";
+// ── Tabel Data ───────────────────────────────────────────
+const DataTable = ({ data }) => {
+  const [expandRow, setExpandRow] = useState(null);
+
+  const toggleRow = (idx) => setExpandRow(expandRow === idx ? null : idx);
 
   return (
-    <div
-      onClick={() => setExpand(!expand)}
-      style={{
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.07)",
-        borderLeft: `3px solid ${warna}`,
-        borderRadius: 12,
-        padding: "12px 14px",
-        marginBottom: 8,
-        cursor: "pointer",
-        transition: "background 0.15s"
-      }}
-    >
-      {/* Baris utama */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>
-              {data.namaPetugas}
-            </span>
-            <span style={{
-              fontSize: 10,
-              background: warna + "22",
-              color: warna,
-              borderRadius: 6,
-              padding: "2px 8px",
-              fontWeight: 600
-            }}>
-              {icon} {data.sesi}
-            </span>
-          </div>
-          <div style={{ fontSize: 12, color: "#64748b", marginTop: 3 }}>
-            {data.tanggal} · {data.jam} WITA
-          </div>
-        </div>
-        <span style={{
-          fontSize: 13,
-          color: expand ? "#60a5fa" : "#475569",
-          marginLeft: 8,
-          transition: "transform 0.2s",
-          transform: expand ? "rotate(180deg)" : "rotate(0deg)",
-          display: "inline-block"
-        }}>▾</span>
-      </div>
-
-      {/* Detail saat expand */}
-      {expand && (
-        <div style={{ marginTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 12 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
-            {[
-              ["📍 Titik", data.namaTitik],
-              ["📏 Jarak", `${data.jarak} m`],
-            ].map(([k, v]) => (
-              <div key={k} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: "8px 10px" }}>
-                <div style={{ fontSize: 10, color: "#64748b", marginBottom: 3 }}>{k}</div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "#e2e8f0" }}>{v}</div>
-              </div>
+    <div style={{
+      overflowX: "auto",
+      borderRadius: 12,
+      border: "1px solid rgba(255,255,255,0.08)",
+      WebkitOverflowScrolling: "touch"
+    }}>
+      <table style={{
+        width: "100%",
+        borderCollapse: "collapse",
+        fontSize: 12,
+        minWidth: 540
+      }}>
+        {/* ── Head ── */}
+        <thead>
+          <tr style={{ background: "rgba(255,255,255,0.04)" }}>
+            {["No", "Petugas", "Sesi", "Tanggal", "Jam", "Titik", "Jarak", ""].map((h, i) => (
+              <th key={i} style={{
+                padding: "10px 12px",
+                textAlign: i === 0 ? "center" : "left",
+                fontSize: 10,
+                fontWeight: 700,
+                color: "#64748b",
+                letterSpacing: 0.8,
+                textTransform: "uppercase",
+                borderBottom: "1px solid rgba(255,255,255,0.08)",
+                whiteSpace: "nowrap"
+              }}>{h}</th>
             ))}
-          </div>
-          {data.keterangan && data.keterangan !== "Tidak ada kejadian" && (
-            <div style={{
-              padding: "10px 12px",
-              background: "rgba(251,191,36,0.08)",
-              border: "1px solid rgba(251,191,36,0.2)",
-              borderRadius: 8,
-              fontSize: 12,
-              color: "#fbbf24",
-              lineHeight: 1.5
-            }}>
-              <strong>Kejadian:</strong> {data.keterangan}
-            </div>
-          )}
-          <div style={{ marginTop: 10, fontSize: 10, color: "#374151", fontFamily: "monospace" }}>
-            {data.id}
-          </div>
-        </div>
-      )}
+          </tr>
+        </thead>
+
+        {/* ── Body ── */}
+        <tbody>
+          {data.map((d, idx) => {
+            const warna  = WARNA_SESI[d.sesi] || "#60a5fa";
+            const icon   = ICON_SESI[d.sesi]  || "📍";
+            const isOpen = expandRow === idx;
+            const hasKet = d.keterangan && d.keterangan !== "Tidak ada kejadian";
+
+            return (
+              <>
+                <tr
+                  key={`row-${idx}`}
+                  onClick={() => toggleRow(idx)}
+                  style={{
+                    background: isOpen
+                      ? "rgba(96,165,250,0.05)"
+                      : idx % 2 === 0
+                        ? "transparent"
+                        : "rgba(255,255,255,0.015)",
+                    borderLeft: isOpen ? `3px solid ${warna}` : "3px solid transparent",
+                    cursor: "pointer",
+                    transition: "background 0.15s, border-color 0.15s"
+                  }}
+                >
+                  {/* No */}
+                  <td style={{
+                    padding: "10px 12px",
+                    textAlign: "center",
+                    color: "#475569",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    fontVariantNumeric: "tabular-nums"
+                  }}>{idx + 1}</td>
+
+                  {/* Petugas */}
+                  <td style={{
+                    padding: "10px 12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    fontWeight: 600,
+                    color: "#f1f5f9",
+                    whiteSpace: "nowrap"
+                  }}>{d.namaPetugas}</td>
+
+                  {/* Sesi */}
+                  <td style={{
+                    padding: "10px 12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)"
+                  }}>
+                    <span style={{
+                      fontSize: 10,
+                      background: warna + "22",
+                      color: warna,
+                      borderRadius: 6,
+                      padding: "3px 8px",
+                      fontWeight: 700,
+                      whiteSpace: "nowrap"
+                    }}>{icon} {d.sesi}</span>
+                  </td>
+
+                  {/* Tanggal */}
+                  <td style={{
+                    padding: "10px 12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    color: "#94a3b8",
+                    whiteSpace: "nowrap",
+                    fontVariantNumeric: "tabular-nums"
+                  }}>{d.tanggal}</td>
+
+                  {/* Jam */}
+                  <td style={{
+                    padding: "10px 12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    color: "#94a3b8",
+                    whiteSpace: "nowrap",
+                    fontVariantNumeric: "tabular-nums"
+                  }}>{d.jam}</td>
+
+                  {/* Titik */}
+                  <td style={{
+                    padding: "10px 12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    color: "#cbd5e1",
+                    maxWidth: 140,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap"
+                  }}>
+                    <span title={d.namaTitik}>📍 {d.namaTitik}</span>
+                  </td>
+
+                  {/* Jarak */}
+                  <td style={{
+                    padding: "10px 12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    color: "#4ade80",
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                    fontVariantNumeric: "tabular-nums"
+                  }}>{d.jarak} m</td>
+
+                  {/* Expand toggle */}
+                  <td style={{
+                    padding: "10px 12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    textAlign: "center"
+                  }}>
+                    {hasKet
+                      ? <span style={{
+                          fontSize: 10,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 3,
+                          color: isOpen ? warna : "#64748b",
+                          transition: "color 0.15s"
+                        }}>
+                          {isOpen ? "▲" : "▼"}
+                        </span>
+                      : <span style={{ color: "#1e293b", fontSize: 10 }}>—</span>
+                    }
+                  </td>
+                </tr>
+
+                {/* ── Expanded: Keterangan ── */}
+                {isOpen && hasKet && (
+                  <tr key={`exp-${idx}`}>
+                    <td colSpan={8} style={{
+                      padding: "0 12px 12px 12px",
+                      borderBottom: "1px solid rgba(255,255,255,0.05)",
+                      background: "rgba(96,165,250,0.03)"
+                    }}>
+                      <div style={{
+                        padding: "10px 14px",
+                        background: "rgba(251,191,36,0.08)",
+                        border: "1px solid rgba(251,191,36,0.2)",
+                        borderRadius: 8,
+                        fontSize: 12,
+                        color: "#fbbf24",
+                        lineHeight: 1.6
+                      }}>
+                        <strong>Kejadian:</strong> {d.keterangan}
+                      </div>
+                      <div style={{
+                        marginTop: 6,
+                        fontSize: 9,
+                        color: "#334155",
+                        fontFamily: "monospace"
+                      }}>{d.id}</div>
+                    </td>
+                  </tr>
+                )}
+              </>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 };
 
 // ── Main Page ────────────────────────────────────────────
 export default function SemuaDataPage() {
-  const [semua, setSemua] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [filterSesi, setFilterSesi] = useState("SEMUA");
+  const [semua, setSemua]             = useState([]);
+  const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState(null);
+  const [filterSesi, setFilterSesi]   = useState("SEMUA");
   const [filterTanggal, setFilterTanggal] = useState("");
-  const [cari, setCari] = useState("");
-  const [hal, setHal] = useState(1);
+  const [cari, setCari]               = useState("");
+  const [hal, setHal]                 = useState(1);
 
   const PER_HAL = 20;
 
@@ -131,8 +236,8 @@ export default function SemuaDataPage() {
     setLoading(true);
     setError(null);
     try {
-      const url = `${APPS_SCRIPT_URL}?action=getAllPatrols`;
-      const res = await fetch(url);
+      const url  = `${APPS_SCRIPT_URL}?action=getAllPatrols`;
+      const res  = await fetch(url);
       const json = await res.json();
       setSemua(json.data || []);
     } catch {
@@ -143,7 +248,6 @@ export default function SemuaDataPage() {
 
   useEffect(() => {
     let isMounted = true;
-    // Defer calling ambilData to avoid synchronous setState within effect
     const timer = setTimeout(() => {
       if (!isMounted) return;
       ambilData();
@@ -153,17 +257,16 @@ export default function SemuaDataPage() {
 
   // Filter
   const filtered = semua.filter(d => {
-    const matchSesi = filterSesi === "SEMUA" || d.sesi === filterSesi;
+    const matchSesi    = filterSesi === "SEMUA" || d.sesi === filterSesi;
     const matchTanggal = !filterTanggal || d.tanggal === filterTanggal;
-    const matchCari = !cari || [d.namaPetugas, d.namaTitik, d.keterangan].some(
+    const matchCari    = !cari || [d.namaPetugas, d.namaTitik, d.keterangan].some(
       v => v?.toLowerCase().includes(cari.toLowerCase())
     );
     return matchSesi && matchTanggal && matchCari;
   });
 
   const totalHal = Math.ceil(filtered.length / PER_HAL);
-  const dataHal = filtered.slice((hal - 1) * PER_HAL, hal * PER_HAL);
-
+  const dataHal  = filtered.slice((hal - 1) * PER_HAL, hal * PER_HAL);
   const resetHal = () => setHal(1);
 
   // Statistik ringkas
@@ -301,7 +404,7 @@ export default function SemuaDataPage() {
         }}>⚠️ {error}</div>
       )}
 
-      {/* Data List */}
+      {/* ── Data Table / States ── */}
       {loading && semua.length === 0 ? (
         <div style={{ textAlign: "center", padding: "40px 0", color: "#475569" }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
@@ -319,11 +422,11 @@ export default function SemuaDataPage() {
         </div>
       ) : (
         <>
-          {dataHal.map((d, i) => <DataRow key={i} data={d} />)}
+          <DataTable data={dataHal} />
 
           {/* Pagination */}
           {totalHal > 1 && (
-            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
               <button
                 onClick={() => setHal(h => Math.max(1, h - 1))}
                 disabled={hal === 1}
