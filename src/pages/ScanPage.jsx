@@ -55,37 +55,108 @@ const buatId = (now) => {
 // ── JSONP: satu-satunya cara reliable kirim data ke GAS ──
 // fetch() no-cors maupun cors tidak bisa ikuti redirect GAS.
 // <script src="..."> mengikuti redirect secara native → data masuk spreadsheet.
+// const simpanDataJSONP = (payload) => {
+//   return new Promise((resolve, reject) => {
+//     // Nama callback unik agar tidak bentrok jika dipanggil berulang
+//     const cbName = `gasCallback_${Date.now()}`;
+
+//     // Timeout 15 detik
+//     const timer = setTimeout(() => {
+//       cleanup();
+//       reject(new Error("Timeout: GAS tidak merespons dalam 15 detik"));
+//     }, 15000);
+
+//     const cleanup = () => {
+//       clearTimeout(timer);
+//       delete window[cbName];
+//       const el = document.getElementById(cbName);
+//       if (el) el.remove();
+//     };
+
+//     // GAS akan memanggil window[cbName](responseJson)
+//     window[cbName] = (data) => {
+//       cleanup();
+//       if (data && data.success) {
+//         resolve(data);
+//       } else {
+//         reject(new Error(data?.message || "GAS melaporkan kegagalan"));
+//       }
+//     };
+
+//     const params = new URLSearchParams({
+//       action:       "savePatrol",
+//       callback:     cbName,           // ← GAS akan membungkus response dengan ini
+//       namaPetugas:  payload.namaPetugas,
+//       keterangan:   payload.keterangan,
+//       namaTitik:    payload.namaTitik,
+//       latTitik:     payload.latTitik,
+//       lngTitik:     payload.lngTitik,
+//       latPetugas:   payload.latPetugas,
+//       lngPetugas:   payload.lngPetugas,
+//       jarak:        payload.jarak,
+//       timestamp:    payload.timestamp,
+//       status:       payload.status,
+//     });
+
+//     const script = document.createElement("script");
+//     script.id  = cbName;
+//     script.src = `${APPS_SCRIPT_URL}?${params.toString()}`;
+//     script.onerror = () => {
+//       cleanup();
+//       reject(new Error("Gagal memuat script JSONP (jaringan/URL salah)"));
+//     };
+
+//     document.head.appendChild(script);
+//     console.log("📤 JSONP request dikirim:", script.src);
+//   });
+// };
+// ── JSONP dengan guard terhadap double execution ──
 const simpanDataJSONP = (payload) => {
   return new Promise((resolve, reject) => {
-    // Nama callback unik agar tidak bentrok jika dipanggil berulang
-    const cbName = `gasCallback_${Date.now()}`;
-
+    // Guard: cegah resolve/reject lebih dari sekali
+    let resolved = false;
+    
+    // Nama callback unik
+    const cbName = `gasCallback_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
+    
     // Timeout 15 detik
     const timer = setTimeout(() => {
-      cleanup();
-      reject(new Error("Timeout: GAS tidak merespons dalam 15 detik"));
+      if (!resolved) {
+        resolved = true;
+        cleanup();
+        reject(new Error("Timeout: GAS tidak merespons dalam 15 detik"));
+      }
     }, 15000);
-
+    
     const cleanup = () => {
       clearTimeout(timer);
       delete window[cbName];
       const el = document.getElementById(cbName);
-      if (el) el.remove();
-    };
-
-    // GAS akan memanggil window[cbName](responseJson)
-    window[cbName] = (data) => {
-      cleanup();
-      if (data && data.success) {
-        resolve(data);
-      } else {
-        reject(new Error(data?.message || "GAS melaporkan kegagalan"));
+      if (el) {
+        el.remove();
       }
     };
-
+    
+    // Callback dengan guard
+    window[cbName] = (data) => {
+      if (!resolved) {
+        resolved = true;
+        cleanup();
+        
+        if (data && data.success) {
+          console.log("✅ Data saved successfully:", data);
+          resolve(data);
+        } else {
+          reject(new Error(data?.message || "GAS melaporkan kegagalan"));
+        }
+      } else {
+        console.warn("⚠️ Callback already executed, ignoring duplicate:", data);
+      }
+    };
+    
     const params = new URLSearchParams({
       action:       "savePatrol",
-      callback:     cbName,           // ← GAS akan membungkus response dengan ini
+      callback:     cbName,
       namaPetugas:  payload.namaPetugas,
       keterangan:   payload.keterangan,
       namaTitik:    payload.namaTitik,
@@ -97,15 +168,18 @@ const simpanDataJSONP = (payload) => {
       timestamp:    payload.timestamp,
       status:       payload.status,
     });
-
+    
     const script = document.createElement("script");
     script.id  = cbName;
     script.src = `${APPS_SCRIPT_URL}?${params.toString()}`;
     script.onerror = () => {
-      cleanup();
-      reject(new Error("Gagal memuat script JSONP (jaringan/URL salah)"));
+      if (!resolved) {
+        resolved = true;
+        cleanup();
+        reject(new Error("Gagal memuat script JSONP (jaringan/URL salah)"));
+      }
     };
-
+    
     document.head.appendChild(script);
     console.log("📤 JSONP request dikirim:", script.src);
   });
@@ -209,6 +283,13 @@ export default function ScanPage() {
   };
 
   const prosesHasilScan = async (rawText) => {
+
+    // Guard: cegah scan ganda
+  if (loading) {
+    console.warn("⚠️ Scan already in progress, ignoring...");
+    return;
+  }
+
     stopCamera();
     setLoading(true);
     setStatus({tipe:"info", pesan:"🔍 Memverifikasi QR Code..."});
