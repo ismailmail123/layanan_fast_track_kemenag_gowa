@@ -2091,6 +2091,196 @@ const InputTitik = ({ label, value, onChange, placeholder, type = "text", theme 
   );
 };
 
+// // ── Card QR Code per titik ───────────────────────────────
+// const TitikCard = ({ titik, onHapus, index, theme }) => {
+//   const isDark = theme === "dark";
+//   const canvasRef = useRef(null);
+//   const downloadCanvasRef = useRef(null);
+//   const encoded = encodeBarcode(titik.nama, titik.lat, titik.lng);
+//   const [qrReady, setQrReady] = useState(false);
+
+//   // Fungsi untuk generate QR menggunakan canvas langsung
+//   const generateQR = useCallback((canvasElement, size, data) => {
+//     if (!canvasElement) return Promise.resolve(false);
+    
+//     return new Promise((resolve) => {
+//       try {
+//         // Bersihkan canvas
+//         const ctx = canvasElement.getContext('2d');
+//         canvasElement.width = size;
+//         canvasElement.height = size;
+//         ctx.fillStyle = '#ffffff';
+//         ctx.fillRect(0, 0, size, size);
+        
+//         const qrData = data;
+        
+//         if (!window.QRCodeLib) {
+//           const script = document.createElement('script');
+//           script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js';
+//           script.onload = () => {
+//             window.QRCodeLib = window.QRCode;
+//             window.QRCodeLib.toCanvas(canvasElement, qrData, {
+//               width: size,
+//               margin: 4,  // Tambah margin biar mudah discan
+//               color: {
+//                 dark: '#000000',
+//                 light: '#ffffff'
+//               },
+//               errorCorrectionLevel: 'L'  // Ganti ke Low agar modul lebih besar
+//             }, (error) => {
+//               if (error) {
+//                 console.error('QR Error:', error);
+//                 resolve(false);
+//               } else {
+//                 resolve(true);
+//               }
+//             });
+//           };
+//           document.head.appendChild(script);
+//         } else {
+//           window.QRCodeLib.toCanvas(canvasElement, qrData, {
+//             width: size,
+//             margin: 4,
+//             color: {
+//               dark: '#000000',
+//               light: '#ffffff'
+//             },
+//             errorCorrectionLevel: 'L'
+//           }, (error) => {
+//             if (error) {
+//               console.error('QR Error:', error);
+//               resolve(false);
+//             } else {
+//               resolve(true);
+//             }
+//           });
+//         }
+//       } catch (err) {
+//         console.error('Gagal generate QR:', err);
+//         resolve(false);
+//       }
+//     });
+//   }, []);
+
+//   // Render QR
+//   useEffect(() => {
+//     const renderQRs = async () => {
+//       if (canvasRef.current) {
+//         const success = await generateQR(canvasRef.current, 200, encoded); // Ukuran preview jadi 200px
+//         if (success) setQrReady(true);
+//       }
+      
+//       if (downloadCanvasRef.current) {
+//         await generateQR(downloadCanvasRef.current, 1000, encoded); // Ukuran download 1000px
+//       }
+//     };
+    
+//     renderQRs();
+//   }, [generateQR, encoded]);
+
+//   const downloadQR = () => {
+//     if (!downloadCanvasRef.current) {
+//       alert("QR Code belum siap");
+//       return;
+//     }
+    
+//     try {
+//       const link = document.createElement("a");
+//       link.download = `QR-Patroli-${titik.nama.replace(/\s+/g, "-")}.png`;
+//       link.href = downloadCanvasRef.current.toDataURL("image/png");
+//       link.click();
+//     } catch (err) {
+//       console.error("Gagal download:", err);
+//       alert("Gagal mendownload QR Code");
+//     }
+//   };
+
+//   return (
+//     <div style={{
+//       background: isDark ? "rgba(255,255,255,0.03)" : "white",
+//       border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid #e9eef8",
+//       borderRadius: 14,
+//       padding: 16,
+//       marginBottom: 12,
+//       boxShadow: isDark ? "none" : "0 2px 12px rgba(0,0,0,0.05)"
+//     }}>
+//       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+//         <div>
+//           <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? "#f1f5f9" : "#1e293b" }}>
+//             📍 {titik.nama}
+//           </div>
+//           <div style={{ fontSize: 11, color: "#64748b", marginTop: 3 }}>
+//             {Number(titik.lat).toFixed(12)}, {Number(titik.lng).toFixed(12)}
+//           </div>
+//         </div>
+//         <div style={{ display: "flex", gap: 6 }}>
+//           <button onClick={downloadQR} style={{
+//             background: "rgba(59,130,246,0.12)",
+//             border: "1px solid rgba(59,130,246,0.3)",
+//             borderRadius: 8,
+//             color: "#60a5fa",
+//             padding: "5px 12px",
+//             fontSize: 11,
+//             cursor: "pointer",
+//             fontWeight: 600
+//           }}>
+//             ⬇ Unduh
+//           </button>
+//           <button onClick={() => onHapus(index)} style={{
+//             background: "rgba(239,68,68,0.1)",
+//             border: "1px solid rgba(239,68,68,0.2)",
+//             borderRadius: 8,
+//             color: "#f87171",
+//             padding: "5px 10px",
+//             fontSize: 11,
+//             cursor: "pointer"
+//           }}>✕</button>
+//         </div>
+//       </div>
+
+//       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+//         <div style={{ background: "white", borderRadius: 10, padding: 8, flexShrink: 0 }}>
+//           <canvas 
+//             ref={canvasRef} 
+//             width={200} 
+//             height={200} 
+//             style={{ width: 200, height: 200, display: 'block' }}
+//           />
+//         </div>
+//         <div style={{ flex: 1 }}>
+//           <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>
+//             Data Terenkripsi (Base64)
+//           </div>
+//           <div style={{
+//             background: isDark ? "rgba(0,0,0,0.3)" : "#f1f5f9",
+//             borderRadius: 8,
+//             padding: "8px 10px",
+//             fontSize: 9,
+//             color: "#4ade80",
+//             fontFamily: "monospace",
+//             wordBreak: "break-all",
+//             lineHeight: 1.6,
+//             maxHeight: 80,
+//             overflow: "auto"
+//           }}>
+//             {encoded}
+//           </div>
+//           <div style={{ fontSize: 10, color: "#475569", marginTop: 8, lineHeight: 1.5 }}>
+//             ✅ Terenkripsi Base64<br/>
+//             📏 Radius scan: 5 meter
+//           </div>
+//         </div>
+//       </div>
+
+//       <canvas 
+//         ref={downloadCanvasRef} 
+//         width={1000} 
+//         height={1000} 
+//         style={{ display: 'none' }}
+//       />
+//     </div>
+//   );
+// };
 // ── Card QR Code per titik ───────────────────────────────
 const TitikCard = ({ titik, onHapus, index, theme }) => {
   const isDark = theme === "dark";
@@ -2105,7 +2295,6 @@ const TitikCard = ({ titik, onHapus, index, theme }) => {
     
     return new Promise((resolve) => {
       try {
-        // Bersihkan canvas
         const ctx = canvasElement.getContext('2d');
         canvasElement.width = size;
         canvasElement.height = size;
@@ -2121,12 +2310,12 @@ const TitikCard = ({ titik, onHapus, index, theme }) => {
             window.QRCodeLib = window.QRCode;
             window.QRCodeLib.toCanvas(canvasElement, qrData, {
               width: size,
-              margin: 4,  // Tambah margin biar mudah discan
+              margin: 4,
               color: {
                 dark: '#000000',
                 light: '#ffffff'
               },
-              errorCorrectionLevel: 'L'  // Ganti ke Low agar modul lebih besar
+              errorCorrectionLevel: 'L'
             }, (error) => {
               if (error) {
                 console.error('QR Error:', error);
@@ -2166,12 +2355,12 @@ const TitikCard = ({ titik, onHapus, index, theme }) => {
   useEffect(() => {
     const renderQRs = async () => {
       if (canvasRef.current) {
-        const success = await generateQR(canvasRef.current, 200, encoded); // Ukuran preview jadi 200px
+        const success = await generateQR(canvasRef.current, 200, encoded);
         if (success) setQrReady(true);
       }
       
       if (downloadCanvasRef.current) {
-        await generateQR(downloadCanvasRef.current, 1000, encoded); // Ukuran download 1000px
+        await generateQR(downloadCanvasRef.current, 1000, encoded);
       }
     };
     
@@ -2185,10 +2374,59 @@ const TitikCard = ({ titik, onHapus, index, theme }) => {
     }
     
     try {
+      // Buat canvas baru untuk hasil akhir dengan desain
+      const finalCanvas = document.createElement("canvas");
+      const ctx = finalCanvas.getContext("2d");
+      
+      // Ukuran QR 1000px + padding untuk teks
+      const qrSize = 1000;
+      const textHeight = 70;
+      const padding = 40;
+      
+      finalCanvas.width = qrSize + (padding * 2);
+      finalCanvas.height = qrSize + textHeight + (padding * 2);
+      
+      // Background putih
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+      
+      // Gambar QR code di tengah
+      const qrImage = downloadCanvasRef.current;
+      ctx.drawImage(qrImage, padding, padding, qrSize, qrSize);
+      
+      // ── Desain teks nama titik di bawah ──
+      const namaTitik = titik.nama;
+      
+      // Garis pemisah elegan
+      const lineY = padding + qrSize + 20;
+      ctx.beginPath();
+      ctx.strokeStyle = "#d4d4d8";
+      ctx.lineWidth = 1.5;
+      ctx.moveTo(padding + 80, lineY);
+      ctx.lineTo(finalCanvas.width - padding - 80, lineY);
+      ctx.stroke();
+      
+      // Icon lokasi
+      ctx.font = "28px 'Segoe UI', system-ui";
+      ctx.fillStyle = "#3b82f6";
+      ctx.fillText("📍", padding + 100, lineY + 38);
+      
+      // Nama titik (bold, besar)
+      ctx.font = "bold 32px 'Segoe UI', system-ui";
+      ctx.fillStyle = "#1e293b";
+      ctx.fillText(namaTitik, padding + 155, lineY + 35);
+      
+      // Tambahan badge "QR Patroli" di pojok kanan bawah
+      ctx.font = "11px 'Segoe UI', system-ui";
+      ctx.fillStyle = "#94a3b8";
+      ctx.fillText("SIPATROLI • QR CODE PATROLI", finalCanvas.width - padding - 170, finalCanvas.height - padding + 12);
+      
+      // Download
       const link = document.createElement("a");
       link.download = `QR-Patroli-${titik.nama.replace(/\s+/g, "-")}.png`;
-      link.href = downloadCanvasRef.current.toDataURL("image/png");
+      link.href = finalCanvas.toDataURL("image/png");
       link.click();
+      
     } catch (err) {
       console.error("Gagal download:", err);
       alert("Gagal mendownload QR Code");
@@ -2281,6 +2519,10 @@ const TitikCard = ({ titik, onHapus, index, theme }) => {
     </div>
   );
 };
+
+
+
+
 // ── Konstanta GPS averaging ──────────────────────────────
 const GPS_SAMPLES_TARGET = 8;
 const GPS_ACCURACY_MAX   = 15;
