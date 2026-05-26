@@ -1938,7 +1938,7 @@
 
 
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { encodeBarcode } from "../utils/index";
 
 const PASSCODE_CONFIG = {
@@ -1961,14 +1961,14 @@ const TITIK_DEFAULT = [
 
 // ── Passcode Guard ───────────────────────────────────────
 function PasscodeGuard({ onUnlock, theme }) {
-  const [input, setInput]           = useState("");
-  const [attempts, setAttempts]     = useState(0);
-  const [lockoutUntil, setLockout]  = useState(null);
-  const [timeLeft, setTimeLeft]     = useState(0);
-  const [shake, setShake]           = useState(false);
-  const [success, setSuccess]       = useState(false);
-  const inputRef                    = useRef(null);
-  const isDark                      = theme === "dark";
+  const [input, setInput]          = useState("");
+  const [attempts, setAttempts]    = useState(0);
+  const [lockoutUntil, setLockout] = useState(null);
+  const [timeLeft, setTimeLeft]    = useState(0);
+  const [shake, setShake]          = useState(false);
+  const [success, setSuccess]      = useState(false);
+  const inputRef                   = useRef(null);
+  const isDark                     = theme === "dark";
 
   useEffect(() => {
     if (!lockoutUntil) return;
@@ -1995,7 +1995,7 @@ function PasscodeGuard({ onUnlock, theme }) {
     if (code === PASSCODE_CONFIG.code) {
       setSuccess(true);
       setTimeout(() => {
-        try { localStorage.setItem(PASSCODE_CONFIG.sessionKey, String(Date.now() + 8 * 3600 * 1000)); } catch (err) { console.error("Gagal menyimpan sesi:", err); }
+        try { localStorage.setItem(PASSCODE_CONFIG.sessionKey, String(Date.now() + 8 * 3600 * 1000)); } catch (err) {console.error("Gagal menyimpan sesi:", err);}
         onUnlock();
       }, 600);
     } else {
@@ -2072,11 +2072,11 @@ function PasscodeGuard({ onUnlock, theme }) {
 
 // ── Cek sesi ─────────────────────────────────────────────
 function checkSession() {
-  try { const exp = localStorage.getItem(PASSCODE_CONFIG.sessionKey); if (exp && Date.now() < parseInt(exp)) return true; } catch (err) { console.error("Gagal cek sesi:", err); }
+  try { const exp = localStorage.getItem(PASSCODE_CONFIG.sessionKey); if (exp && Date.now() < parseInt(exp)) return true; } catch (err) { console.error("Gagal memeriksa sesi:", err); }
   return false;
 }
 
-// ── Input Titik ──────────────────────────────────────────
+// ── InputTitik ───────────────────────────────────────────
 const InputTitik = ({ label, value, onChange, placeholder, type = "text", theme }) => {
   const isDark = theme === "dark";
   return (
@@ -2091,111 +2091,196 @@ const InputTitik = ({ label, value, onChange, placeholder, type = "text", theme 
   );
 };
 
-// ── TitikCard ────────────────────────────────────────────
+// ── Card QR Code per titik ───────────────────────────────
 const TitikCard = ({ titik, onHapus, index, theme }) => {
-  const isDark   = theme === "dark";
+  const isDark = theme === "dark";
   const canvasRef = useRef(null);
-  const encoded  = encodeBarcode(titik.nama, titik.lat, titik.lng);
+  const downloadCanvasRef = useRef(null);
+  const encoded = encodeBarcode(titik.nama, titik.lat, titik.lng);
+  const [qrReady, setQrReady] = useState(false);
 
-  useEffect(() => {
-    const renderQR = () => {
-      if (!canvasRef.current) return;
-      canvasRef.current.innerHTML = "";
+  // Fungsi untuk generate QR menggunakan canvas langsung
+  const generateQR = useCallback((canvasElement, size, data) => {
+    if (!canvasElement) return Promise.resolve(false);
+    
+    return new Promise((resolve) => {
       try {
-        new window.QRCode(canvasRef.current, {
-          text: encoded,
-          width: 160, height: 160,
-          colorDark:  "#000000",
-          colorLight: "#ffffff",
-          correctLevel: window.QRCode.CorrectLevel.H
-        });
-      } catch (err) { console.error("Gagal render QR:", err); }
-    };
+        // Bersihkan canvas
+        const ctx = canvasElement.getContext('2d');
+        canvasElement.width = size;
+        canvasElement.height = size;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+        
+        const qrData = data;
+        
+        if (!window.QRCodeLib) {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js';
+          script.onload = () => {
+            window.QRCodeLib = window.QRCode;
+            window.QRCodeLib.toCanvas(canvasElement, qrData, {
+              width: size,
+              margin: 4,  // Tambah margin biar mudah discan
+              color: {
+                dark: '#000000',
+                light: '#ffffff'
+              },
+              errorCorrectionLevel: 'L'  // Ganti ke Low agar modul lebih besar
+            }, (error) => {
+              if (error) {
+                console.error('QR Error:', error);
+                resolve(false);
+              } else {
+                resolve(true);
+              }
+            });
+          };
+          document.head.appendChild(script);
+        } else {
+          window.QRCodeLib.toCanvas(canvasElement, qrData, {
+            width: size,
+            margin: 4,
+            color: {
+              dark: '#000000',
+              light: '#ffffff'
+            },
+            errorCorrectionLevel: 'L'
+          }, (error) => {
+            if (error) {
+              console.error('QR Error:', error);
+              resolve(false);
+            } else {
+              resolve(true);
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Gagal generate QR:', err);
+        resolve(false);
+      }
+    });
+  }, []);
 
-    if (!window.QRCode) {
-      const script = document.createElement("script");
-      script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
-      script.onload = renderQR;
-      document.head.appendChild(script);
-    } else {
-      renderQR();
-    }
-  }, [encoded]);
+  // Render QR
+  useEffect(() => {
+    const renderQRs = async () => {
+      if (canvasRef.current) {
+        const success = await generateQR(canvasRef.current, 200, encoded); // Ukuran preview jadi 200px
+        if (success) setQrReady(true);
+      }
+      
+      if (downloadCanvasRef.current) {
+        await generateQR(downloadCanvasRef.current, 1000, encoded); // Ukuran download 1000px
+      }
+    };
+    
+    renderQRs();
+  }, [generateQR, encoded]);
 
   const downloadQR = () => {
-    const container = canvasRef.current;
-    if (!container) return;
-
-    const sourceCanvas = container.querySelector("canvas");
-    const sourceImg    = container.querySelector("img");
-    const SIZE         = 400;
-
-    const offscreen    = document.createElement("canvas");
-    offscreen.width    = SIZE;
-    offscreen.height   = SIZE;
-    const ctx          = offscreen.getContext("2d");
-
-    // Background putih wajib — JPEG tidak punya alpha channel
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, SIZE, SIZE);
-
-    const doDownload = () => {
-      const link    = document.createElement("a");
-      link.href     = offscreen.toDataURL("image/jpeg", 0.97);
-      link.download = `QR-Patroli-${titik.nama.replace(/\s+/g, "-")}.jpeg`;
+    if (!downloadCanvasRef.current) {
+      alert("QR Code belum siap");
+      return;
+    }
+    
+    try {
+      const link = document.createElement("a");
+      link.download = `QR-Patroli-${titik.nama.replace(/\s+/g, "-")}.png`;
+      link.href = downloadCanvasRef.current.toDataURL("image/png");
       link.click();
-    };
-
-    if (sourceCanvas) {
-      // Ambil langsung dari canvas internal QRCode — paling andal
-      ctx.drawImage(sourceCanvas, 0, 0, SIZE, SIZE);
-      doDownload();
-    } else if (sourceImg && sourceImg.complete && sourceImg.naturalWidth > 0) {
-      // Img sudah fully loaded
-      ctx.drawImage(sourceImg, 0, 0, SIZE, SIZE);
-      doDownload();
-    } else if (sourceImg) {
-      // Tunggu img selesai load
-      sourceImg.onload = () => {
-        ctx.drawImage(sourceImg, 0, 0, SIZE, SIZE);
-        doDownload();
-      };
+    } catch (err) {
+      console.error("Gagal download:", err);
+      alert("Gagal mendownload QR Code");
     }
   };
 
   return (
-    <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "white", border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid #e9eef8", borderRadius: 14, padding: 16, marginBottom: 12, boxShadow: isDark ? "none" : "0 2px 12px rgba(0,0,0,0.05)" }}>
+    <div style={{
+      background: isDark ? "rgba(255,255,255,0.03)" : "white",
+      border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid #e9eef8",
+      borderRadius: 14,
+      padding: 16,
+      marginBottom: 12,
+      boxShadow: isDark ? "none" : "0 2px 12px rgba(0,0,0,0.05)"
+    }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? "#f1f5f9" : "#1e293b" }}>📍 {titik.nama}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? "#f1f5f9" : "#1e293b" }}>
+            📍 {titik.nama}
+          </div>
           <div style={{ fontSize: 11, color: "#64748b", marginTop: 3 }}>
             {Number(titik.lat).toFixed(12)}, {Number(titik.lng).toFixed(12)}
           </div>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
-          <button onClick={downloadQR} style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.3)", borderRadius: 8, color: "#60a5fa", padding: "5px 12px", fontSize: 11, cursor: "pointer", fontWeight: 600 }}>⬇ Unduh</button>
-          <button onClick={() => onHapus(index)} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: "#f87171", padding: "5px 10px", fontSize: 11, cursor: "pointer" }}>✕</button>
+          <button onClick={downloadQR} style={{
+            background: "rgba(59,130,246,0.12)",
+            border: "1px solid rgba(59,130,246,0.3)",
+            borderRadius: 8,
+            color: "#60a5fa",
+            padding: "5px 12px",
+            fontSize: 11,
+            cursor: "pointer",
+            fontWeight: 600
+          }}>
+            ⬇ Unduh
+          </button>
+          <button onClick={() => onHapus(index)} style={{
+            background: "rgba(239,68,68,0.1)",
+            border: "1px solid rgba(239,68,68,0.2)",
+            borderRadius: 8,
+            color: "#f87171",
+            padding: "5px 10px",
+            fontSize: 11,
+            cursor: "pointer"
+          }}>✕</button>
         </div>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         <div style={{ background: "white", borderRadius: 10, padding: 8, flexShrink: 0 }}>
-          <div ref={canvasRef} style={{ width: 160, height: 160 }} />
+          <canvas 
+            ref={canvasRef} 
+            width={200} 
+            height={200} 
+            style={{ width: 200, height: 200, display: 'block' }}
+          />
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Data Terenkripsi (Base64)</div>
-          <div style={{ background: isDark ? "rgba(0,0,0,0.3)" : "#f1f5f9", borderRadius: 8, padding: "8px 10px", fontSize: 9, color: "#4ade80", fontFamily: "monospace", wordBreak: "break-all", lineHeight: 1.6, maxHeight: 80, overflow: "auto" }}>
+          <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>
+            Data Terenkripsi (Base64)
+          </div>
+          <div style={{
+            background: isDark ? "rgba(0,0,0,0.3)" : "#f1f5f9",
+            borderRadius: 8,
+            padding: "8px 10px",
+            fontSize: 9,
+            color: "#4ade80",
+            fontFamily: "monospace",
+            wordBreak: "break-all",
+            lineHeight: 1.6,
+            maxHeight: 80,
+            overflow: "auto"
+          }}>
             {encoded}
           </div>
           <div style={{ fontSize: 10, color: "#475569", marginTop: 8, lineHeight: 1.5 }}>
-            ✅ Terenkripsi Base64<br/>📏 Radius scan: 5 meter
+            ✅ Terenkripsi Base64<br/>
+            📏 Radius scan: 5 meter
           </div>
         </div>
       </div>
+
+      <canvas 
+        ref={downloadCanvasRef} 
+        width={1000} 
+        height={1000} 
+        style={{ display: 'none' }}
+      />
     </div>
   );
 };
-
 // ── Konstanta GPS averaging ──────────────────────────────
 const GPS_SAMPLES_TARGET = 8;
 const GPS_ACCURACY_MAX   = 15;
@@ -2280,7 +2365,7 @@ function GeneratorContent({ theme, onLock }) {
     }, GPS_TIMEOUT_MS);
   };
 
-  const cancelGPS    = () => { stopGPS(); setGpsPhase("idle"); setGpsSamples([]); setGpsMessage(""); };
+  const cancelGPS     = () => { stopGPS(); setGpsPhase("idle"); setGpsSamples([]); setGpsMessage(""); };
   const resetGPSState = () => { stopGPS(); setGpsPhase("idle"); setGpsSamples([]); setGpsMessage(""); setGpsBestAccuracy(null); };
 
   const tambahTitik = () => {
@@ -2307,7 +2392,7 @@ function GeneratorContent({ theme, onLock }) {
           <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: isDark ? "#f1f5f9" : "#1e293b" }}>Generator QR Patroli</h1>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>Buat QR Code terenkripsi untuk setiap titik</p>
         </div>
-        <button onClick={() => { try { localStorage.removeItem(PASSCODE_CONFIG.sessionKey); } catch (e) {} onLock(); }}
+        <button onClick={() => { try { localStorage.removeItem(PASSCODE_CONFIG.sessionKey); } catch (err) { console.error("Gagal menghapus sesi:", err); } onLock(); }}
           style={{ background: isDark ? "rgba(239,68,68,0.1)" : "#fff1f2", border: isDark ? "1px solid rgba(239,68,68,0.2)" : "1px solid #fecdd3", borderRadius: 10, color: "#f87171", padding: "7px 12px", fontSize: 11, cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>
           🔒 Kunci
         </button>
