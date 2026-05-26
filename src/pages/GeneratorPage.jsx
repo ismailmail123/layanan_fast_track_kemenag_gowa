@@ -1403,7 +1403,7 @@ const InputTitik = ({ label, value, onChange, placeholder, type = "text", theme 
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        step={type === "number" ? "0.000001" : undefined}
+        step={type === "number" ? "0.000000000001" : undefined}
         style={{
           width: "100%",
           background: isDark ? "rgba(255,255,255,0.05)" : "white",
@@ -1452,15 +1452,27 @@ const TitikCard = ({ titik, onHapus, index, theme }) => {
   }, [encoded]);
 
   const downloadQR = () => {
-    const container = canvasRef.current;
-    if (!container) return;
-    const img = container.querySelector("img") || container.querySelector("canvas");
-    if (!img) return;
-    const link = document.createElement("a");
-    link.href = img.tagName === "IMG" ? img.src : img.toDataURL("image/png");
-    link.download = `QR-Patroli-${titik.nama.replace(/\s+/g, "-")}.png`;
-    link.click();
-  };
+  const container = canvasRef.current;
+  if (!container) return;
+  const img = container.querySelector("img") || container.querySelector("canvas");
+  if (!img) return;
+
+  const offscreen = document.createElement("canvas");
+  const SIZE = 176;
+  offscreen.width  = SIZE;
+  offscreen.height = SIZE;
+  const ctx = offscreen.getContext("2d");
+
+  // Background putih wajib — JPEG tidak support transparansi
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  ctx.drawImage(img, 0, 0, SIZE, SIZE);
+
+  const link = document.createElement("a");
+  link.href = offscreen.toDataURL("image/jpeg", 0.97);
+  link.download = `QR-Patroli-${titik.nama.replace(/\s+/g, "-")}.jpeg`;
+  link.click();
+};
 
   return (
     <div style={{
@@ -1475,7 +1487,7 @@ const TitikCard = ({ titik, onHapus, index, theme }) => {
             📍 {titik.nama}
           </div>
           <div style={{ fontSize: 11, color: "#64748b", marginTop: 3 }}>
-            {titik.lat.toFixed(6)}, {titik.lng.toFixed(6)}
+            {titik.lat.toFixed(12)}, {titik.lng.toFixed(12)}
           </div>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
@@ -1572,8 +1584,8 @@ function GeneratorContent({ theme, onLock }) {
 
     setForm(f => ({
       ...f,
-      lat: avgLat.toFixed(7),
-      lng: avgLng.toFixed(7)
+      lat: avgLat.toFixed(12),
+      lng: avgLng.toFixed(12)
     }));
     setGpsBestAccuracy(bestAcc);
     setGpsPhase("done");

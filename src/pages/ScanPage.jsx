@@ -448,7 +448,7 @@ import { useState, useRef, useEffect } from "react";
 import { hitungJarak, dapatkanPosisi, getSesiSaatIni, formatWaktu, formatTanggalPendek } from "../utils/index";
 import { APPS_SCRIPT_URL } from "../App";
 
-const JARAK_MAKS = 5;
+const JARAK_MAKS = 25;
 let lastSubmittedData = null;
 
 // ── Decode QR ────────────────────────────────────────────
@@ -728,6 +728,21 @@ export default function ScanPage() {
         setIsSubmitting(false);
         return;
       }
+
+      // 📍 LOG LOKASI SAAT SCAN
+    console.group("📍 INFORMASI LOKASI SCAN");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("📱 POSISI PETUGAS:");
+    console.log(`   Latitude : ${posisi.latitude}`);
+    console.log(`   Longitude: ${posisi.longitude}`);
+    console.log(`   Akurasi  : ${posisi.accuracy ? `${posisi.accuracy} meter` : 'Tidak tersedia'}`);
+    console.log(`   Waktu    : ${new Date().toLocaleString('id-ID')}`);
+    console.log("");
+    console.log("📍 TITIK QR CODE:");
+    console.log(`   Nama     : ${dataTitik.nama}`);
+    console.log(`   Latitude : ${dataTitik.latitude}`);
+    console.log(`   Longitude: ${dataTitik.longitude}`);
+    console.log("");
       
       // ✅ Hitung jarak
       const jarak = hitungJarak(posisi.latitude, posisi.longitude, dataTitik.latitude, dataTitik.longitude);
