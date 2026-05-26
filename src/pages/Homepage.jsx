@@ -117,7 +117,7 @@ export default function App() {
               SIPATROLI
             </div>
             <div style={{ fontSize: 10, color: T.subColor, letterSpacing: 0.5 }}>
-              Sistem Kontrol Keliling · Rutan
+              Sistem Informasi Patroli · Rutan Bantaeng
             </div>
           </div>
         </div>
