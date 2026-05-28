@@ -407,45 +407,74 @@
 // }
 
 
-// SemuaDataPage.js (disesuaikan dengan tema)
+// HariIniPage.js (disesuaikan dengan tema)
 import { useState, useEffect } from "react";
-import { SESI_CONFIG } from "../utils/index";
-import { APPS_SCRIPT_URL, THEMES } from "../pages/Homepage";
+import { SESI_CONFIG, getSesiSaatIni, formatTanggal, formatTanggalPendek } from "../utils/index";
+import { APPS_SCRIPT_URL, THEMES } from "./Homepage";
 
-const WARNA_SESI = Object.fromEntries(SESI_CONFIG.map(s => [s.id, s.warna]));
-const ICON_SESI  = Object.fromEntries(SESI_CONFIG.map(s => [s.id, s.icon]));
-
-const FilterChip = ({ label, active, onClick, color, theme }) => {
+const SesiBadge = ({ sesi, active, onClick, count, theme }) => {
   const isDark = theme === "dark";
+  const T = THEMES[theme];
+  
   return (
     <button
       onClick={onClick}
       style={{
-        padding: "6px 14px",
+        flex: "0 0 auto",
+        padding: "8px 16px",
         borderRadius: 100,
-        border: active 
-          ? `2px solid ${color || "#60a5fa"}` 
+        border: active
+          ? `2px solid ${sesi.warna}`
           : `1px solid ${isDark ? "rgba(255,255,255,0.15)" : "#d1daf7"}`,
-        background: active 
-          ? (color || "#60a5fa") + "22" 
-          : isDark ? "rgba(255,255,255,0.03)" : "#f8faff",
-        color: active ? (color || "#60a5fa") : isDark ? "#64748b" : "#475569",
-        fontSize: 11,
+        background: active ? sesi.warna + "22" : isDark ? "rgba(255,255,255,0.03)" : "#f8faff",
+        color: active ? sesi.warna : T.subColor,
+        fontSize: 12,
         fontWeight: 600,
         cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
         whiteSpace: "nowrap",
-        transition: "all 0.15s"
+        transition: "all 0.2s"
       }}
-    >{label}</button>
+    >
+      <span>{sesi.icon}</span>
+      <span>{sesi.label}</span>
+      {count > 0 && (
+        <span style={{
+          background: sesi.warna,
+          color: "white",
+          borderRadius: 100,
+          minWidth: 18,
+          height: 18,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 10, fontWeight: 700, padding: "0 5px"
+        }}>{count}</span>
+      )}
+    </button>
   );
 };
 
-const DataTable = ({ data, theme }) => {
+const PatrolTable = ({ data, warnaSesi, theme }) => {
   const [expandRow, setExpandRow] = useState(null);
   const isDark = theme === "dark";
   const T = THEMES[theme];
 
-  const toggleRow = (idx) => setExpandRow(expandRow === idx ? null : idx);
+  if (!data || data.length === 0) {
+    return (
+      <div style={{
+        textAlign: "center",
+        padding: "40px 20px",
+        background: isDark ? "rgba(255,255,255,0.02)" : "#f8faff",
+        border: `1px dashed ${isDark ? "rgba(255,255,255,0.1)" : "#d1daf7"}`,
+        borderRadius: 16,
+        color: T.subColor
+      }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+        <div style={{ fontSize: 14 }}>Belum ada data kontrol</div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -457,11 +486,11 @@ const DataTable = ({ data, theme }) => {
         width: "100%",
         borderCollapse: "collapse",
         fontSize: 12,
-        minWidth: 540
+        minWidth: 500
       }}>
         <thead>
           <tr style={{ background: isDark ? "rgba(255,255,255,0.04)" : "#f1f5f9" }}>
-            {["No", "Petugas", "Sesi", "Tanggal", "Jam", "Titik", "Jarak", ""].map((h, i) => (
+            {["No", "Petugas", "Jam", "Titik", "Jarak", ""].map((h, i) => (
               <th key={i} style={{
                 padding: "10px 12px",
                 textAlign: i === 0 ? "center" : "left",
@@ -478,23 +507,21 @@ const DataTable = ({ data, theme }) => {
         </thead>
         <tbody>
           {data.map((d, idx) => {
-            const warna  = WARNA_SESI[d.sesi] || "#60a5fa";
-            const icon   = ICON_SESI[d.sesi]  || "📍";
             const isOpen = expandRow === idx;
             const hasKet = d.keterangan && d.keterangan !== "Tidak ada kejadian";
 
             return (
               <>
                 <tr
-                  onClick={() => toggleRow(idx)}
+                  onClick={() => setExpandRow(isOpen ? null : idx)}
                   style={{
                     background: isOpen
                       ? isDark ? "rgba(96,165,250,0.08)" : "rgba(37,99,235,0.04)"
                       : idx % 2 === 0
                         ? "transparent"
                         : isDark ? "rgba(255,255,255,0.02)" : "#f8faff",
-                    borderLeft: isOpen ? `3px solid ${warna}` : "3px solid transparent",
-                    cursor: "pointer",
+                    borderLeft: isOpen ? `3px solid ${warnaSesi}` : "3px solid transparent",
+                    cursor: hasKet ? "pointer" : "default",
                     transition: "all 0.15s"
                   }}
                 >
@@ -513,35 +540,15 @@ const DataTable = ({ data, theme }) => {
                   }}>{d.namaPetugas}</td>
                   <td style={{
                     padding: "10px 12px",
-                    borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "#e2e8f0"}`
-                  }}>
-                    <span style={{
-                      fontSize: 10,
-                      background: warna + "22",
-                      color: warna,
-                      borderRadius: 6,
-                      padding: "3px 8px",
-                      fontWeight: 700,
-                      whiteSpace: "nowrap"
-                    }}>{icon} {d.sesi}</span>
-                  </td>
-                  <td style={{
-                    padding: "10px 12px",
                     borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "#e2e8f0"}`,
                     color: T.subColor,
                     whiteSpace: "nowrap"
-                  }}>{d.tanggal}</td>
-                  <td style={{
-                    padding: "10px 12px",
-                    borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "#e2e8f0"}`,
-                    color: T.subColor,
-                    whiteSpace: "nowrap"
-                  }}>{d.jam}</td>
+                  }}>{d.jam} <span style={{ fontSize: 9 }}>WITA</span></td>
                   <td style={{
                     padding: "10px 12px",
                     borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "#e2e8f0"}`,
                     color: T.titleColor,
-                    maxWidth: 140,
+                    maxWidth: 180,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap"
@@ -560,23 +567,19 @@ const DataTable = ({ data, theme }) => {
                     borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "#e2e8f0"}`,
                     textAlign: "center"
                   }}>
-                    {hasKet
-                      ? <span style={{
-                          fontSize: 10,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 3,
-                          color: isOpen ? warna : T.subColor
-                        }}>
-                          {isOpen ? "▲" : "▼"}
-                        </span>
-                      : <span style={{ color: isDark ? "#1e293b" : "#e2e8f0", fontSize: 10 }}>—</span>
-                    }
+                    {hasKet ? (
+                      <span style={{
+                        fontSize: 10,
+                        color: isOpen ? warnaSesi : T.subColor,
+                      }}>{isOpen ? "▲" : "▼"}</span>
+                    ) : (
+                      <span style={{ color: isDark ? "#1e293b" : "#e2e8f0", fontSize: 10 }}>—</span>
+                    )}
                   </td>
-                </tr>
+                 </tr>
                 {isOpen && hasKet && (
                   <tr>
-                    <td colSpan={8} style={{
+                    <td colSpan={6} style={{
                       padding: "0 12px 12px 12px",
                       borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "#e2e8f0"}`,
                       background: isDark ? "rgba(96,165,250,0.03)" : "rgba(37,99,235,0.02)"
@@ -610,159 +613,134 @@ const DataTable = ({ data, theme }) => {
   );
 };
 
-export default function SemuaDataPage({ theme = "dark" }) {
-  const [semua, setSemua]             = useState([]);
-  const [loading, setLoading]         = useState(false);
-  const [error, setError]             = useState(null);
-  const [filterSesi, setFilterSesi]   = useState("SEMUA");
-  const [filterTanggal, setFilterTanggal] = useState("");
-  const [cari, setCari]               = useState("");
-  const [hal, setHal]                 = useState(1);
+export default function HariIniPage({ theme = "dark" }) {
+  const [sesiAktif, setSesiAktif] = useState(getSesiSaatIni());
+  const [dataMap, setDataMap]     = useState({});
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState(null);
+  const [lastRefresh, setLastRefresh] = useState(null);
   const T = THEMES[theme];
   const isDark = theme === "dark";
-
-  const PER_HAL = 20;
 
   const ambilData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const url  = `${APPS_SCRIPT_URL}?action=getAllPatrols`;
-      const res  = await fetch(url);
-      const json = await res.json();
-      setSemua(json.data || []);
-    } catch {
-      setError("Gagal memuat data.");
+      const tanggal = formatTanggalPendek();
+      const hasil = {};
+
+      await Promise.all(SESI_CONFIG.map(async (s) => {
+        const url = `${APPS_SCRIPT_URL}?action=getPatrols&tanggal=${encodeURIComponent(tanggal)}&sesi=${encodeURIComponent(s.id)}`;
+        const res  = await fetch(url);
+        const json = await res.json();
+        hasil[s.id] = json.data || [];
+      }));
+
+      setDataMap(hasil);
+      setLastRefresh(new Date());
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      setError("Gagal memuat data. Periksa koneksi internet.");
     }
     setLoading(false);
   };
 
   useEffect(() => {
-    let isMounted = true;
-    const timer = setTimeout(() => {
-      if (!isMounted) return;
-      ambilData();
-    }, 0);
-    return () => { isMounted = false; clearTimeout(timer); };
+    const initTimeout = setTimeout(() => ambilData(), 0);
+    const interval    = setInterval(ambilData, 60000);
+    return () => { clearTimeout(initTimeout); clearInterval(interval); };
   }, []);
 
-  const filtered = semua.filter(d => {
-    const matchSesi    = filterSesi === "SEMUA" || d.sesi === filterSesi;
-    const matchTanggal = !filterTanggal || d.tanggal === filterTanggal;
-    const matchCari    = !cari || [d.namaPetugas, d.namaTitik, d.keterangan].some(
-      v => v?.toLowerCase().includes(cari.toLowerCase())
-    );
-    return matchSesi && matchTanggal && matchCari;
-  });
-
-  const totalHal = Math.ceil(filtered.length / PER_HAL);
-  const dataHal  = filtered.slice((hal - 1) * PER_HAL, hal * PER_HAL);
-  const resetHal = () => setHal(1);
-
-  const statPerSesi = SESI_CONFIG.map(s => ({
-    ...s,
-    count: semua.filter(d => d.sesi === s.id).length
-  }));
+  const sesiConfig = SESI_CONFIG.find(s => s.id === sesiAktif);
+  const dataSesi   = dataMap[sesiAktif] || [];
 
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: T.titleColor }}>
-          Riwayat Semua Data
+          Laporan Hari Ini
         </h1>
         <p style={{ margin: "4px 0 0", fontSize: 13, color: T.subColor }}>
-          Total {semua.length} catatan kontrol
+          {formatTanggal()}
         </p>
+      </div>
+
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(2, 1fr)",
+        gap: 10,
+        marginBottom: 20
+      }}>
+        {SESI_CONFIG.map(s => (
+          <div
+            key={s.id}
+            onClick={() => setSesiAktif(s.id)}
+            style={{
+              background: sesiAktif === s.id ? s.warna + "18" : isDark ? "rgba(255,255,255,0.03)" : "#f8faff",
+              border: `1px solid ${sesiAktif === s.id ? s.warna + "55" : isDark ? s.warna + "33" : s.warna + "44"}`,
+              borderRadius: 12,
+              padding: "12px 14px",
+              cursor: "pointer",
+              transition: "all 0.2s"
+            }}
+          >
+            <div style={{ fontSize: 11, color: T.subColor, marginBottom: 4 }}>
+              {s.icon} {s.label}
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: s.warna }}>
+              {(dataMap[s.id] || []).length}
+            </div>
+            <div style={{ fontSize: 10, color: isDark ? "#475569" : "#94a3b8" }}>scan tercatat</div>
+          </div>
+        ))}
       </div>
 
       <div style={{
         display: "flex",
         gap: 8,
         overflowX: "auto",
-        marginBottom: 20,
         paddingBottom: 4,
+        marginBottom: 16,
       }}>
-        {statPerSesi.map(s => (
-          <div key={s.id} style={{
-            flex: "0 0 auto",
-            background: s.warna + "11",
-            border: `1px solid ${s.warna}33`,
-            borderRadius: 12,
-            padding: "10px 14px",
-            minWidth: 90,
-            textAlign: "center"
-          }}>
-            <div style={{ fontSize: 18 }}>{s.icon}</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: s.warna }}>{s.count}</div>
-            <div style={{ fontSize: 9, color: T.subColor }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ marginBottom: 12 }}>
-        <input
-          type="text"
-          value={cari}
-          onChange={e => { setCari(e.target.value); resetHal(); }}
-          placeholder="🔍  Cari nama petugas, titik, keterangan..."
-          style={{
-            width: "100%",
-            background: isDark ? "rgba(255,255,255,0.05)" : "#f8faff",
-            border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "#d1daf7"}`,
-            borderRadius: 10,
-            padding: "12px 14px",
-            color: T.titleColor,
-            fontSize: 13,
-            outline: "none",
-            boxSizing: "border-box"
-          }}
-        />
-      </div>
-
-      <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 10 }}>
-        <FilterChip
-          label="Semua Sesi"
-          active={filterSesi === "SEMUA"}
-          onClick={() => { setFilterSesi("SEMUA"); resetHal(); }}
-          color="#60a5fa"
-          theme={theme}
-        />
         {SESI_CONFIG.map(s => (
-          <FilterChip
+          <SesiBadge
             key={s.id}
-            label={`${s.icon} ${s.label}`}
-            active={filterSesi === s.id}
-            onClick={() => { setFilterSesi(s.id); resetHal(); }}
-            color={s.warna}
+            sesi={s}
+            active={sesiAktif === s.id}
+            count={(dataMap[s.id] || []).length}
+            onClick={() => setSesiAktif(s.id)}
             theme={theme}
           />
         ))}
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <input
-          type="text"
-          value={filterTanggal}
-          onChange={e => { setFilterTanggal(e.target.value); resetHal(); }}
-          placeholder="Filter tanggal (dd/mm/yyyy)"
-          style={{
-            width: "100%",
-            background: isDark ? "rgba(255,255,255,0.05)" : "#f8faff",
-            border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "#d1daf7"}`,
-            borderRadius: 10,
-            padding: "10px 14px",
-            color: T.titleColor,
-            fontSize: 13,
-            outline: "none",
-            boxSizing: "border-box"
-          }}
-        />
-      </div>
+      {sesiConfig && (
+        <div style={{
+          background: `${sesiConfig.warna}11`,
+          border: `1px solid ${sesiConfig.warna}33`,
+          borderRadius: 10,
+          padding: "10px 14px",
+          marginBottom: 16,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: sesiConfig.warna }}>
+              {sesiConfig.icon} {sesiConfig.label}
+            </div>
+            <div style={{ fontSize: 11, color: T.subColor }}>{sesiConfig.jam} WITA</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: sesiConfig.warna }}>
+              {dataSesi.length}
+            </div>
+            <div style={{ fontSize: 10, color: T.subColor }}>total scan</div>
+          </div>
+        </div>
+      )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <span style={{ fontSize: 12, color: T.subColor }}>
-          Menampilkan {filtered.length} data
-        </span>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
         <button
           onClick={ambilData}
           disabled={loading}
@@ -771,73 +749,41 @@ export default function SemuaDataPage({ theme = "dark" }) {
             border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "#dde5f3"}`,
             borderRadius: 8,
             color: T.subColor,
-            padding: "6px 12px",
-            fontSize: 11,
-            cursor: "pointer"
+            padding: "6px 14px",
+            fontSize: 12,
+            cursor: "pointer",
+            display: "flex", alignItems: "center", gap: 6
           }}
-        >{loading ? "⏳" : "🔄"} {loading ? "Memuat..." : "Refresh"}</button>
+        >
+          {loading ? "⏳" : "🔄"} {loading ? "Memuat..." : "Perbarui"}
+        </button>
       </div>
 
       {error && (
         <div style={{
           background: isDark ? "rgba(239,68,68,0.1)" : "rgba(239,68,68,0.08)",
           border: `1px solid ${isDark ? "rgba(239,68,68,0.3)" : "rgba(239,68,68,0.3)"}`,
-          borderRadius: 10, padding: 14,
-          color: "#f87171", fontSize: 13, marginBottom: 16
+          borderRadius: 10,
+          padding: 14,
+          color: "#f87171",
+          fontSize: 13,
+          marginBottom: 16
         }}>⚠️ {error}</div>
       )}
 
-      {loading && semua.length === 0 ? (
+      {loading && dataSesi.length === 0 ? (
         <div style={{ textAlign: "center", padding: "40px 0", color: T.subColor }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
           <div>Memuat data...</div>
         </div>
-      ) : filtered.length === 0 ? (
-        <div style={{
-          textAlign: "center", padding: "40px 20px",
-          background: isDark ? "rgba(255,255,255,0.02)" : "#f8faff",
-          border: `1px dashed ${isDark ? "rgba(255,255,255,0.1)" : "#d1daf7"}`,
-          borderRadius: 16, color: T.subColor
-        }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>📭</div>
-          <div style={{ fontSize: 14 }}>Tidak ada data ditemukan</div>
-        </div>
       ) : (
-        <>
-          <DataTable data={dataHal} theme={theme} />
+        <PatrolTable data={dataSesi} warnaSesi={sesiConfig?.warna || "#60a5fa"} theme={theme} />
+      )}
 
-          {totalHal > 1 && (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-              <button
-                onClick={() => setHal(h => Math.max(1, h - 1))}
-                disabled={hal === 1}
-                style={{
-                  background: isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9",
-                  border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "#dde5f3"}`,
-                  borderRadius: 8, color: T.subColor,
-                  padding: "8px 16px", fontSize: 12,
-                  cursor: hal === 1 ? "not-allowed" : "pointer",
-                  opacity: hal === 1 ? 0.4 : 1
-                }}
-              >← Sebelumnya</button>
-              <span style={{ padding: "8px 14px", fontSize: 12, color: T.subColor }}>
-                {hal} / {totalHal}
-              </span>
-              <button
-                onClick={() => setHal(h => Math.min(totalHal, h + 1))}
-                disabled={hal === totalHal}
-                style={{
-                  background: isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9",
-                  border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "#dde5f3"}`,
-                  borderRadius: 8, color: T.subColor,
-                  padding: "8px 16px", fontSize: 12,
-                  cursor: hal === totalHal ? "not-allowed" : "pointer",
-                  opacity: hal === totalHal ? 0.4 : 1
-                }}
-              >Berikutnya →</button>
-            </div>
-          )}
-        </>
+      {lastRefresh && (
+        <div style={{ textAlign: "center", marginTop: 16, fontSize: 11, color: isDark ? "#374151" : "#94a3b8" }}>
+          Terakhir diperbarui: {lastRefresh.toLocaleTimeString("id-ID")}
+        </div>
       )}
     </div>
   );
