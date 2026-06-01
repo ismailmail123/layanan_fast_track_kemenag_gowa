@@ -1382,7 +1382,8 @@
 // ScanPage.js (disesuaikan dengan tema - tambahkan import React di awal jika belum ada)
 import { useState, useRef, useEffect } from "react";
 import { hitungJarak, dapatkanPosisi, getSesiSaatIni, formatWaktu, formatTanggalPendek } from "../utils/index";
-import { APPS_SCRIPT_URL, THEMES } from "./Homepage";
+import { THEMES } from "./Homepage";
+import { APPS_SCRIPT_URL } from "../App";
 
 const JARAK_MAKS = 25;
 let lastSubmittedData = null;
