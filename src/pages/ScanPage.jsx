@@ -1385,7 +1385,7 @@ import { hitungJarak, dapatkanPosisi, getSesiSaatIni, formatWaktu, formatTanggal
 import { THEMES } from "./Homepage";
 import { APPS_SCRIPT_URL } from "../App";
 
-const JARAK_MAKS = 25;
+const JARAK_MAKS = 40;
 let lastSubmittedData = null;
 
 const decodeBarcodeFlexibel = (rawText) => {
