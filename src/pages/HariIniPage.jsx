@@ -410,7 +410,8 @@
 // HariIniPage.js (disesuaikan dengan tema)
 import { useState, useEffect } from "react";
 import { SESI_CONFIG, getSesiSaatIni, formatTanggal, formatTanggalPendek } from "../utils/index";
-import { APPS_SCRIPT_URL, THEMES } from "./Homepage";
+import { THEMES } from "./Homepage";
+import {APPS_SCRIPT_URL} from "../App";
 
 const SesiBadge = ({ sesi, active, onClick, count, theme }) => {
   const isDark = theme === "dark";
