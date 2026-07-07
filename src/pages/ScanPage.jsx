@@ -1378,8 +1378,6 @@
 // }
 
 
-
-// ScanPage.js (disesuaikan dengan tema - tambahkan import React di awal jika belum ada)
 import { useState, useRef, useEffect } from "react";
 import { hitungJarak, dapatkanPosisi, getSesiSaatIni, formatWaktu, formatTanggalPendek } from "../utils/index";
 import { THEMES } from "./Homepage";
@@ -1799,7 +1797,7 @@ export default function ScanPage({ theme = "dark" }) {
       <div style={{marginTop:16,padding:"12px 16px",background:isDark ? "rgba(255,255,255,0.02)" : "#f8faff",border:`1px solid ${isDark ? "rgba(255,255,255,0.05)" : "#e2e8f0"}`,borderRadius:10,display:"flex",alignItems:"center",gap:10}}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill={T.subColor}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
         <span style={{fontSize:12,color:T.subColor,lineHeight:1.5}}>
-          Maksimal jarak scan: <strong style={{color:T.titleColor}}>{JARAK_MAKS} meter</strong> dari titik QR Code.
+          Maksimal jarak scan: <strong style={{color:T.titleColor}}>5 meter</strong> dari titik QR Code.
         </span>
       </div>
     </div>
